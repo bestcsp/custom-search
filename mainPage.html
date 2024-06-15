@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elasticsearch Search</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+    }
+    .sidebar {
+      width: 200px;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+    }
+    .content {
+      flex-grow: 1;
+      padding: 20px;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h3>Filters</h3>
+      <div id="category-filters"></div>
+    </div>
+    <div class="content">
+      <h1>Search</h1>
+      <input type="text" id="search-input" placeholder="Search...">
+      <button onclick="performSearch()">Search</button>
+      <div id="results"></div>
+      <div class="pagination">
+        <button onclick="prevPage()">Previous</button>
+        <span id="page-info"></span>
+        <button onclick="nextPage()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    const pageSize = 10;
+    let totalResults = 0;
+    let selectedFilters = {};
+
+    function performSearch() {
+      const query = document.getElementById('search-input').value;
+      const filters = Object.keys(selectedFilters).map(field => ({ field, value: selectedFilters[field] }));
+      
+      fetch('http://localhost:3000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query, page: currentPage, pageSize, filters })
+      })
+      .then(response => response.json())
+      .then(data => {
+        totalResults = data.total;
+        displayResults(data.hits);
+        displayAggregations(data.aggregations);
+        updatePaginationInfo();
+      });
+    }
+
+    function displayResults(hits) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = hits.map(hit => `
+        <div>
+          <h2>${hit._source.title}</h2>
+          <p>${hit._source.description}</p>
+          <p><strong>Category:</strong> ${hit._source.category}</p>
+          <p><strong>Price:</strong> $${hit._source.price}</p>
+        </div>
+      `).join('');
+    }
+
+    function displayAggregations(aggregations) {
+      const categoryFiltersDiv = document.getElementById('category-filters');
+      categoryFiltersDiv.innerHTML = aggregations.categories.buckets.map(bucket => `
+        <div>
+          <input type="checkbox" id="filter-${bucket.key}" onchange="toggleFilter('category', '${bucket.key}')">
+          <label for="filter-${bucket.key}">${bucket.key} (${bucket.doc_count})</label>
+        </div>
+      `).join('');
+    }
+
+    function toggleFilter(field, value) {
+      if (selectedFilters[field] === value) {
+        delete selectedFilters[field];
+      } else {
+        selectedFilters[field] = value;
+      }
+      performSearch();
+    }
+
+    function updatePaginationInfo() {
+      const pageInfo = document.getElementById('page-info');
+      pageInfo.innerText = `Page ${currentPage} of ${Math.ceil(totalResults / pageSize)}`;
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        performSearch();
+      }
+    }
+
+    function nextPage() {
+      if (currentPage * pageSize < totalResults) {
+        currentPage++;
+        performSearch();
+      }
+    }
+
+    // Perform the initial search to load data
+    performSearch();
+  </script>
+</body>
+</html>

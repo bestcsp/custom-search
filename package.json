@@ -1,0 +1,11 @@
+{
+  "name": "mainApp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@elastic/elasticsearch": "^6.8.8",
+    "cors": "^2.8.5",
+    "express.js": "^1.0.0"
+  }
+}
