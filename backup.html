@@ -115,7 +115,7 @@
         <div class="result-item">
           <img class="productImage" src="${hit._source.image}">
           <h5>${hit._source.title}</h5>
-          <p><strong>Price:</strong> ₹${hit._source.price}</p>
+          <p><strong>Price:</strong> $${hit._source.price}</p>
         </div>
       `).join('');
     }

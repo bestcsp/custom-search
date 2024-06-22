@@ -17,33 +17,45 @@ app.use(cors(corsOptions))
 
 app.post('/search', async (req, res) => {
   const { query, page, pageSize, filters } = req.body;
+  const alterField=(field)=>{
+    if(field=='titles')field="title.keyword"
+    return field
+  }
+  const searchEnabledFields=['title', 'description', 'category']//we can fetch db data and cache it on every index
+  const facetEnabledFields=[{fieldName:"category"},{fieldName:"title"}]//we can use DB call and cacheToHandleIt and //, keyword is being used for tokenized data and 
   const boolQuery = {
     bool: {
       must: query ? [{
         multi_match: {
           query: query,
-          fields: ['title', 'description', 'category']
+          fields: searchEnabledFields
         }
       }] : [{
         match_all: {}
       }],
       filter: filters ? filters.map(filter => ({
-        term: { [filter.field]: filter.value }
+        term: { [alterField(filter.field)]: filter.value }
       })) : []
     }
   };
-
+  const AggregationQuery=facetEnabledFields.reduce(aggObj,data=>{
+    return {
+      [data.fieldName]:{terms:{field:alterField(data.fieldName)}}
+    }
+  },{})
+  console.log("-->",JSON.stringify({
+    query: boolQuery,
+    aggs: AggregationQuery
+    ,
+    from: (page - 1) * pageSize,
+    size: pageSize
+  }),)
   const result = await client.search({
     index: 'fake-data',
     body: {
       query: boolQuery,
       aggs: {
-        categories: {
-          terms: { field: 'category' }
-        },
-        titles: {
-          terms: { field: 'title.keyword' }
-        }
+        ...AggregationQuery
       },
       from: (page - 1) * pageSize,
       size: pageSize
@@ -56,6 +68,7 @@ app.post('/search', async (req, res) => {
     total: result.body.hits.total.value
   });
 });
+// app.get('/reindex/:indexName',reindex)
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
