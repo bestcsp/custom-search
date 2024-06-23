@@ -18,7 +18,7 @@ app.use(cors(corsOptions))
 app.post('/search', async (req, res) => {
   const { query, page, pageSize, filters } = req.body;
   const alterField=(field)=>{
-    if(field=='titles')field="title.keyword"
+    if(field=='title')field="title.keyword"
     return field
   }
   const searchEnabledFields=['title', 'description', 'category']//we can fetch db data and cache it on every index
@@ -38,25 +38,18 @@ app.post('/search', async (req, res) => {
       })) : []
     }
   };
-  const AggregationQuery=facetEnabledFields.reduce(aggObj,data=>{
+  const AggregationQuery = facetEnabledFields.reduce((aggObj, data) => {
     return {
-      [data.fieldName]:{terms:{field:alterField(data.fieldName)}}
-    }
-  },{})
-  console.log("-->",JSON.stringify({
-    query: boolQuery,
-    aggs: AggregationQuery
-    ,
-    from: (page - 1) * pageSize,
-    size: pageSize
-  }),)
+      ...aggObj,
+      [data.fieldName]: { terms: { field: alterField(data.fieldName) } }
+    };
+  }, {});
+ 
   const result = await client.search({
     index: 'fake-data',
     body: {
       query: boolQuery,
-      aggs: {
-        ...AggregationQuery
-      },
+      aggs: AggregationQuery,
       from: (page - 1) * pageSize,
       size: pageSize
     }
