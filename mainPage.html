@@ -45,7 +45,7 @@
     .pagination button {
       margin: 0 5px;
     }
-    .sidebar #filters{
+    .sidebar #filters {
       width: 213px;
     }
     .productImage {
@@ -131,10 +131,11 @@
           fieldDiv.innerHTML = `<h4>${field}</h4>`;
           
           buckets.forEach(bucket => {
+            const isChecked = selectedFilters[field] && selectedFilters[field].includes(bucket.key);
             const filterDiv = document.createElement('div');
             filterDiv.innerHTML = `
               <input type="checkbox" id="filter-${field}-${bucket.key}" 
-                onchange="toggleFilter('${field}', '${bucket.key}')">
+                ${isChecked ? 'checked' : ''} onchange="toggleFilter('${field}', '${bucket.key}')">
               <label for="filter-${field}-${bucket.key}">${bucket.key} (${bucket.doc_count})</label>
             `;
             fieldDiv.appendChild(filterDiv);
