@@ -64,6 +64,7 @@
       <h1>Search</h1>
       <input type="text" id="search-input" placeholder="Search...">
       <button onclick="performSearch()">Search</button>
+      <div id="totalCount"></div>
       <div id="results" class="results"></div>
       <div class="pagination">
         <button onclick="prevPage()">Previous</button>
@@ -163,10 +164,10 @@
     }
 
     function displayTotalProducts(total) {
-      const totalDiv = document.createElement('div');
-      totalDiv.innerHTML = `Total Number of Search Results: ${total}<br>`;
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.prepend(totalDiv);
+      // const totalDiv = document.createElement('div');
+      // totalDiv.innerHTML = `Total Number of Search Results: ${total}<br>`;
+      const resultsDiv = document.getElementById('totalCount');
+      resultsDiv.innerHTML=`Total Number of Search Results: ${total}<br>`;
     }
 
     function prevPage() {
