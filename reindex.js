@@ -1,4 +1,8 @@
-const Reindex =(req,res)=>{
+
+
+const Reindex =async(req,res)=>{
+    const {indexName} = req.params;
+    await createMapping()
 
 }
 
